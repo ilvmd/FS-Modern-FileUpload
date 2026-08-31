@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest>
+  <control namespace="FSControls"
+    constructor="FileUploadControl"
+    version="1.0.0"
+    display-name-key="Pre-Save File Upload"
+    description-key="Stage file uploads on a Create form and persist them as Notes once the record is saved."
+    control-type="standard">
+
+    <!-- ==================================================================
+         BOUND PROPERTY
+         Bound to a Multiline Text ("Multiple") column on the entity.
+         IMPORTANT: this column NEVER stores file binary content. It only
+         stores a small JSON "state" payload (pending file metadata + a
+         flag indicating whether Notes have already been created for the
+         current save cycle). This is what keeps the form "dirty" while
+         files are staged and lets the control recover minimal state if
+         it is re-initialized before save.
+         ================================================================== -->
+    <property name="value"
+      display-name-key="State (do not edit)"
+      description-key="Internal JSON state used by the control. Bind to a Multiline Text column dedicated to this control."
+      of-type="Multiple"
+      usage="bound"
+      required="true" />
+
+    <!-- ==================================================================
+         CONFIGURATION PROPERTIES (static inputs, set on the form/field)
+         ================================================================== -->
+    <property name="documentFileFieldLogicalName"
+      display-name-key="Document File Field Logical Name"
+      description-key="Logical name of the Dataverse File column where the uploaded document will be stored."
+      of-type="SingleLine.Text"
+      usage="input"
+      required="false"
+      default-value="" />
+
+    <property name="allowMultipleFiles"
+      display-name-key="Allow multiple files"
+      description-key="If disabled, only a single file may be staged/attached at a time."
+      of-type="TwoOptions"
+      usage="input"
+      required="true"
+      default-value="true" />
+
+    <property name="allowedExtensions"
+      display-name-key="Allowed extensions"
+      description-key="Comma-separated list of allowed file extensions, e.g. .pdf,.docx,.png"
+      of-type="SingleLine.Text"
+      usage="input"
+      required="true"
+      default-value=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.txt" />
+
+    <property name="allowedMimeTypes"
+      display-name-key="Allowed MIME types"
+      description-key="Comma-separated list of allowed MIME types."
+      of-type="SingleLine.Text"
+      usage="input"
+      required="true"
+      default-value="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/png,image/jpeg,image/gif,text/plain" />
+
+    <property name="maxFileSizeKB"
+      display-name-key="Max file size (KB)"
+      description-key="Maximum allowed size per file, in kilobytes. Default is 10240 KB (10 MB)."
+      of-type="Whole.None"
+      usage="input"
+      required="true"
+      default-value="10240" />
+
+    <property name="maxFileCount"
+      display-name-key="Max file count"
+      description-key="Maximum number of files that may be staged/attached in total."
+      of-type="Whole.None"
+      usage="input"
+      required="true"
+      default-value="1" />
+
+    <!-- ==================================================================
+         DISPLAY / UX CONFIGURATION
+         ================================================================== -->
+    <property name="displayMode"
+      display-name-key="Display mode"
+      description-key="Dropzone: the current large drag-and-drop card. Button: a compact modern button showing the file name (or file count when multiple)."
+      of-type="Enum"
+      usage="input"
+      required="true"
+      default-value="0">
+      <value name="Dropzone" display-name-key="Dropzone (drag &amp; drop card)">0</value>
+      <value name="Button" display-name-key="Button (compact)">1</value>
+    </property>
+
+    <property name="buttonIdleLabel"
+      display-name-key="Button idle label"
+      description-key="Label shown on the trigger button before any file is staged or attached. Only used when Display mode is Button."
+      of-type="SingleLine.Text"
+      usage="input"
+      required="false"
+      default-value="Upload File" />
+
+    <property name="labalColor"
+      display-name-key="Labal color"
+      description-key="Hex color used for the Labal dropzone/button/links/badges, e.g. #0078d4."
+      of-type="SingleLine.Text"
+      usage="input"
+      required="false"
+      default-value="#000000" />
+
+    <property name="accentColor"
+      display-name-key="Accent color"
+      description-key="Hex color used for the dropzone/button/links/badges, e.g. #0078d4."
+      of-type="SingleLine.Text"
+      usage="input"
+      required="false"
+      default-value="#0F6CBD" />
+
+    <property name="showPreviewThumbnails"
+      display-name-key="Show preview thumbnails"
+      description-key="Render image/PDF/text thumbnails in file cards instead of always using the generic type icon."
+      of-type="TwoOptions"
+      usage="input"
+      required="true"
+      default-value="true" />
+
+    <property name="showFileMeta"
+      display-name-key="Show file size/type"
+      description-key="Show the size and MIME type line under each file name."
+      of-type="TwoOptions"
+      usage="input"
+      required="true"
+      default-value="true" />
+
+    <property name="allowPreview"
+      display-name-key="Allow preview"
+      description-key="Show the preview action on already-attached files."
+      of-type="TwoOptions"
+      usage="input"
+      required="true"
+      default-value="true" />
+
+    <property name="allowDownload"
+      display-name-key="Allow download"
+      description-key="Show the Download action on already-attached files."
+      of-type="TwoOptions"
+      usage="input"
+      required="true"
+      default-value="true" />
+
+    <property name="allowDelete"
+      display-name-key="Allow delete/remove"
+      description-key="Show the Delete/Remove action on files (staged or already attached)."
+      of-type="TwoOptions"
+      usage="input"
+      required="true"
+      default-value="true" />
+
+    <property name="confirmBeforeDelete"
+      display-name-key="Confirm before delete"
+      description-key="Ask for confirmation (native Dataverse dialog) before deleting an attached file."
+      of-type="TwoOptions"
+      usage="input"
+      required="true"
+      default-value="true" />
+
+    <!-- <property name="readOnly"
+      display-name-key="Read-only"
+      description-key="Fully read-only: disables new uploads and all remove/delete actions. The list becomes purely informational."
+      of-type="TwoOptions"
+      usage="input"
+      required="true"
+      default-value="false" /> -->
+
+    <property name="replacePCFWithSelectedFiles"
+      display-name-key="Replace PCF With Selected Files"
+      description-key="Replace PCF Control With Selected Files"
+      of-type="TwoOptions"
+      usage="input"
+      required="true"
+      default-value="true" />
+
+    <!-- ==================================================================
+         POST-UPLOAD FORM BEHAVIOR (requires Global Xrm - see XrmHelper.ts)
+         ================================================================== -->
+    <!-- <property name="enableXrmIntegration"
+      display-name-key="Enable Xrm integration"
+      description-key="Master switch for every feature that relies on the Global Xrm object (hide/show
+    fields after upload, native confirm dialogs, resolving the client URL). Disable in environments
+    where reaching outside the PCF sandbox is undesirable."
+      of-type="TwoOptions"
+      usage="input"
+      required="true"
+      default-value="true" /> -->
+
+    <property name="hideControlAfterUpload"
+      display-name-key="Hide this control after upload"
+      description-key="Once a file is successfully uploaded / the Note is created, hide this control own field on the form. Requires Enable Xrm integration."
+      of-type="TwoOptions"
+      usage="input"
+      required="true"
+      default-value="false" />
+
+    <property name="showDocumentFieldAfterUpload"
+      display-name-key="Show Document field after upload"
+      description-key="Once a file is successfully uploaded, show the Dataverse File column field (Document File Field Logical Name) on the form. Requires Enable Xrm integration."
+      of-type="TwoOptions"
+      usage="input"
+      required="true"
+      default-value="false" />
+
+    <!-- ==================================================================
+         SINGLE-FILE-FIELD MODE (allowMultipleFiles = false AND
+         documentFileFieldLogicalName set): the file is uploaded directly to
+         the native Dataverse File column, and the control's preview/
+         download/delete actions read from that File column - not from a
+         Note - since the File column is the authoritative copy. This
+         property controls whether a redundant Annotation (Note) copy of
+         the same file is also created.
+         ================================================================== -->
+    <property name="deleteNoteAfterFileFieldUpload"
+      display-name-key="Delete Note after File column upload"
+      description-key="Single-file mode with a Document File Field set only. True (default): only upload to the File column, no Annotation/Note is created at all. False: also create/keep an Annotation (Note) copy of the file alongside the File column value, as a redundant audit-trail copy."
+      of-type="TwoOptions"
+      usage="input"
+      required="true"
+      default-value="true" />
+
+    <!-- ==================================================================
+         RESOURCES
+         ================================================================== -->
+    <resources>
+      <code path="index.ts" order="1" />
+      <css path="css/FileUploadControl-v1.1.css" order="1" />
+    </resources>
+
+    <!-- WebAPI  -> required for context.webAPI (create/retrieve/delete Annotation records)
+         Utility -> required for context.utils.getEntityMetadata (resolves the correct
+                    OData entity set name used to bind notes to the parent record) -->
+    <feature-usage>
+      <uses-feature name="WebAPI" required="true" />
+      <uses-feature name="Utility" required="true" />
+    </feature-usage>
+
+  </control>
+</manifest>
